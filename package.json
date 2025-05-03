@@ -1,0 +1,22 @@
+{
+  "name": "node-fs-task",
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Salt-Upon-Wounds/node-fs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Salt-Upon-Wounds/node-fs/issues"
+  },
+  "homepage": "https://github.com/Salt-Upon-Wounds/node-fs#readme",
+  "description": ""
+}
