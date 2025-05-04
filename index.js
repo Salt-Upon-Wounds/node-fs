@@ -35,8 +35,24 @@ rl.on('line', (line) => {
   const input = line.split(' ')
   const args = input.slice(1)
   const cmd = input[0]
-  if (cmd === 'up') {
-    chdir('..')
+  switch (cmd) {
+    case 'up': up(); break
+    case 'cd': cd(args[0]); break
+    case '.exit': rl.close(); return
+    default: console.log('Invalid input')
   }
+  console.log()
   dirMsg()
 })
+
+function up() {
+  chdir('..')
+}
+
+function cd(arg) {
+  try {
+    chdir(arg)
+  } catch {
+    console.log('Operation failed')
+  }
+}
