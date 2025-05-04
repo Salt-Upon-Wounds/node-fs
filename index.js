@@ -1,12 +1,8 @@
 import process, { chdir } from "node:process"
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import readline from 'node:readline'
 import os from 'node:os'
 import fs from 'node:fs/promises'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 const homeDir = os.homedir();
 
 chdir(homeDir)
@@ -71,10 +67,22 @@ function cd(arg) {
 }
 
 async function ls() {
-  /* Print in console list of all files and folders in current directory. List should contain:
-    list should contain files and folder names (for files - with extension)
-    folders and files are sorted in alphabetical order ascending, but list of folders goes first
-    type of directory content should be marked explicitly (e.g. as a corresponding column value) */
+  try {
+    const content = await fs.readdir(process.cwd(), { withFileTypes: true })
+    const dirs = []
+    const files = []
+    for (const el of content) {
+      if (el.isDirectory()) {
+        dirs.push({ Name: el.name, Type: 'directory'})
+      } else if (el.isFile()) {
+        files.push({ Name: el.name, Type: 'file'})
+      }
+    }
+    const comparer = (a, b) => a.Name.localeCompare(b.Name)
+    console.table([...dirs.sort(comparer), ...files.sort(comparer)])
+  } catch {
+    console.log('Operation failed')
+  }
 }
 
 function cat(path_to_file) {
