@@ -40,12 +40,12 @@ rl.on('line', async (line) => {
     case '.exit': rl.close(); return
     case 'ls': await ls(); break
     case 'cat': await cat(args[0]); break
-    case 'add': add(); break
-    case 'mkdir': mkdir(); break
-    case 'rn': rn(); break
-    case 'cp': cp(); break
-    case 'mv': mv(); break
-    case 'rm': rm(); break
+    case 'add': await add(args[0]); break
+    case 'mkdir': await mkdir(args[0]); break
+    case 'rn': await rn(args[0], args[1]); break
+    case 'cp': await cp(args[0], args[1]); break
+    case 'mv': await mv(); break
+    case 'rm': await rm(); break
     case 'os': _os(); break
     case 'hash': hash(); break
     case 'compress': compress(); break
@@ -92,17 +92,32 @@ async function cat(path_to_file) {
     const full_path = path.resolve(path_to_file)
     if (!(await fs.stat(full_path)).isFile()) throw Error()
     await new Promise((resolve, reject) => {
-      const stream = createReadStream(full_path, { encoding: 'utf8' });
-      stream.on('error', reject);
-      stream.on('end', resolve);
-      stream.pipe(stdout);
-    });
+      const stream = createReadStream(full_path, { encoding: 'utf8' })
+      stream.on('error', reject)
+      stream.on('end', resolve)
+      stream.pipe(stdout)
+    })
   } catch {
     console.log('Operation failed')
   }
 }
 
-function add(new_file_name) {
+async function add(new_file_name) {
+  const full_path = path.resolve(new_file_name)
+  try {
+    await stat(full_path)
+    console.log('Operation failed')
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      try {
+        await writeFile(fullPath, '', { flag: 'wx' });
+      } catch {
+        console.log('Operation failed');
+      }
+    } else {
+      console.log('Operation failed');
+    }
+  }
 
 }
 
