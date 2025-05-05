@@ -4,6 +4,7 @@ import os from 'node:os'
 import fs from 'node:fs/promises'
 import path from 'path'
 import { createReadStream, createWriteStream } from "node:fs"
+import { createHash } from "node:crypto"
 import zlib from 'node:zlib'
 
 const homeDir = os.homedir();
@@ -49,10 +50,10 @@ rl.on('line', async (line) => {
     case 'cp': await cp(args[0], args[1]); break
     case 'mv': await mv(args[0], args[1]); break
     case 'rm': await rm(args[0]); break
-    case 'os': _os(); break
-    case 'hash': await hash(); break
-    case 'compress': await compress(); break
-    case 'decompress': await decompress(); break
+    case 'os': _os(args[0]); break
+    case 'hash': await hash(args[0]); break
+    case 'compress': await compress(args[0], args[1]); break
+    case 'decompress': await decompress(args[0], args[1]); break
     default: console.log('Invalid input')
   }
   console.log()
@@ -203,11 +204,11 @@ async function rm(path_to_file) {
 
 function _os(arg) {
   switch (arg) {
-    case '--EOL': console.log(JSON.stringify(os.EOL)); break;
-    case '--cpus': print_cpus(); break;
-    case '--homedir': console.log(homeDir); break;
-    case '--username': console.log(os.userInfo().username); break;
-    case '--architecture': console.log(process.arch); break;
+    case '--EOL': console.log(JSON.stringify(os.EOL)); break
+    case '--cpus': print_cpus(); break
+    case '--homedir': console.log(homeDir); break
+    case '--username': console.log(os.userInfo().username); break
+    case '--architecture': console.log(process.arch); break
     default: console.log('Invalid input')
   }
 }
@@ -223,25 +224,24 @@ function print_cpus() {
 }
 
 async function hash(path_to_file) {
-  const full_path = path.resolve(path_to_file);
+  const full_path = path.resolve(path_to_file)
 
   try {
-    const stats = await stat(full_path);
-    if (!stats.isFile()) throw new Error();
+    if (!(await fs.stat(full_path)).isFile()) throw Error()
 
-    return await new Promise((resolve, reject) => {
-      const stream = createReadStream(full_path);
-      const hash = createHash('sha256');
+    await new Promise((resolve, reject) => {
+      const stream = createReadStream(full_path)
+      const hash = createHash('sha256')
 
-      stream.on('error', reject);
-      stream.on('data', (chunk) => hash.update(chunk));
+      stream.on('error', reject)
+      stream.on('data', (chunk) => hash.update(chunk))
       stream.on('end', () => {
         console.log(hash.digest('hex'))
         resolve()
-      });
-    });
+      })
+    })
   } catch {
-    throw new Error('Operation failed');
+    console.log('Operation failed');
   }
 }
 
@@ -271,6 +271,7 @@ async function compresser(path_to_file, new_filename, brotli) {
           outStream.on('error', reject)
           outStream.on('finish', resolve)
         })
+        await rm(path_to_file)
       } else {
         console.log('Operation failed')
       }
