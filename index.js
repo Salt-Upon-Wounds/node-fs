@@ -121,7 +121,7 @@ async function add(new_file_name) {
 }
 
 async function mkdir(new_directory_name) {
-  const full_path = path.resolve(new_file_name)
+  const full_path = path.resolve(new_directory_name)
   try {
     await stat(full_path)
     console.log('Operation failed')
@@ -158,12 +158,36 @@ async function rn(path_to_file, new_filename) {
   }
 }
 
-function cp(path_to_file, path_to_new_directory) {
+async function cp(path_to_file, path_to_new_directory) {
+  const oldpath = path.resolve(path_to_file)
+  const newpath = path.resolve(path_to_new_directory)
+  try {
+    await fs.stat(oldpath)
+    try {
+      await fs.stat(newpath)
+      console.log('Operation failed')
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        await new Promise((resolve, reject) => {
+          const readStream = createReadStream(oldpath);
+          const writeStream = createWriteStream(newpath);
 
+          readStream.on('error', reject);
+          writeStream.on('error', reject);
+          readStream.pipe(writeStream);
+          writeStream.on('finish', resolve);
+        })
+      } else {
+        console.log('Operation failed')
+      }
+    }
+  } catch {
+    console.log('Operation failed')
+  }
 }
 
-function mv(path_to_file, path_to_new_directory) {
-
+async function mv(path_to_file, path_to_new_directory) {
+  await cp(path_to_file, path_to_new_directory).then(() => rm(path_to_file))
 }
 
 async function rm(path_to_file) {
