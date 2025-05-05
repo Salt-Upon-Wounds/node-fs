@@ -1,7 +1,9 @@
-import process, { chdir } from "node:process"
+import process, { chdir, stdout } from "node:process"
 import readline from 'node:readline'
 import os from 'node:os'
 import fs from 'node:fs/promises'
+import path from 'path'
+import { createReadStream } from "node:fs"
 
 const homeDir = os.homedir();
 
@@ -37,7 +39,7 @@ rl.on('line', async (line) => {
     case 'cd': cd(args[0]); break
     case '.exit': rl.close(); return
     case 'ls': await ls(); break
-    case 'cat': cat(); break
+    case 'cat': await cat(args[0]); break
     case 'add': add(); break
     case 'mkdir': mkdir(); break
     case 'rn': rn(); break
@@ -85,8 +87,19 @@ async function ls() {
   }
 }
 
-function cat(path_to_file) {
-  //read file content
+async function cat(path_to_file) {
+  try {
+    const full_path = path.resolve(path_to_file)
+    if (!(await fs.stat(full_path)).isFile()) throw Error()
+    await new Promise((resolve, reject) => {
+      const stream = createReadStream(full_path, { encoding: 'utf8' });
+      stream.on('error', reject);
+      stream.on('end', resolve);
+      stream.pipe(stdout);
+    });
+  } catch {
+    console.log('Operation failed')
+  }
 }
 
 function add(new_file_name) {
