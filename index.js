@@ -166,8 +166,13 @@ function mv(path_to_file, path_to_new_directory) {
 
 }
 
-function rm(path_to_file) {
-
+async function rm(path_to_file) {
+  const full_path = path.resolve(path_to_file)
+  try {
+    await unlink(full_path);
+  } catch {
+    console.log('Operation failed');
+  }
 }
 
 function _os(arg) {
