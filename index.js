@@ -3,7 +3,7 @@ import readline from 'node:readline'
 import os from 'node:os'
 import fs from 'node:fs/promises'
 import path from 'path'
-import { createReadStream } from "node:fs"
+import { createReadStream, createWriteStream } from "node:fs"
 
 const homeDir = os.homedir();
 
@@ -31,9 +31,11 @@ process.on('SIGINT', () => {
 })
 
 rl.on('line', async (line) => {
-  const input = line.split(' ')
-  const args = input.slice(1)
-  const cmd = input[0]
+  const regex = /[^\s"]+|"([^"]*)"/g
+  const result = []
+  let match
+  while ((match = regex.exec(line)) !== null) result.push(match[1] || match[0])
+  const [cmd, ...args] = result
   switch (cmd) {
     case 'up': up(); break
     case 'cd': cd(args[0]); break
@@ -62,7 +64,7 @@ function up() {
 
 function cd(arg) {
   try {
-    chdir(arg)
+    chdir(path.resolve(arg))
   } catch {
     console.log('Operation failed')
   }
@@ -110,7 +112,7 @@ async function add(new_file_name) {
   } catch (err) {
     if (err.code === 'ENOENT') {
       try {
-        await fs.writeFile(fullPath, '', { flag: 'wx' })
+        await fs.writeFile(full_path, '', { flag: 'wx' })
       } catch {
         console.log('Operation failed')
       }
@@ -123,12 +125,12 @@ async function add(new_file_name) {
 async function mkdir(new_directory_name) {
   const full_path = path.resolve(new_directory_name)
   try {
-    await stat(full_path)
+    await fs.stat(full_path)
     console.log('Operation failed')
   } catch (err) {
     if (err.code === 'ENOENT') {
       try {
-        await mkdir(fullPath)
+        await fs.mkdir(full_path)
       } catch {
         console.log('Operation failed')
       }
@@ -161,26 +163,25 @@ async function rn(path_to_file, new_filename) {
 async function cp(path_to_file, path_to_new_directory) {
   const oldpath = path.resolve(path_to_file)
   const newpath = path.resolve(path_to_new_directory)
+  const full_newpath = path.resolve(path_to_new_directory, path.basename(oldpath))
   try {
     await fs.stat(oldpath)
-    try {
-      await fs.stat(newpath)
-      console.log('Operation failed')
-    } catch (err) {
-      if (err.code === 'ENOENT') {
-        await new Promise((resolve, reject) => {
-          const readStream = createReadStream(oldpath);
-          const writeStream = createWriteStream(newpath);
-
-          readStream.on('error', reject);
-          writeStream.on('error', reject);
-          readStream.pipe(writeStream);
-          writeStream.on('finish', resolve);
-        })
-      } else {
-        console.log('Operation failed')
-      }
+    if (
+      (await fs.stat(newpath)).isFile() || await fs.stat(full_newpath).then((el) => el.isFile()).catch(() => 0)
+    ) {
+      throw Error()
     }
+    await new Promise((resolve, reject) => {
+      const readStream = createReadStream(oldpath);
+      const writeStream = createWriteStream(full_newpath);
+
+      readStream.on('error', reject);
+      writeStream.on('error', reject);
+      readStream.pipe(writeStream);
+      writeStream.on('finish', resolve);
+    }).catch(() => {
+      console.log('Operation failed')
+    })
   } catch {
     console.log('Operation failed')
   }
@@ -193,7 +194,7 @@ async function mv(path_to_file, path_to_new_directory) {
 async function rm(path_to_file) {
   const full_path = path.resolve(path_to_file)
   try {
-    await unlink(full_path);
+    await fs.unlink(full_path);
   } catch {
     console.log('Operation failed');
   }
