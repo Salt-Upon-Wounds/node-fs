@@ -44,8 +44,8 @@ rl.on('line', async (line) => {
     case 'mkdir': await mkdir(args[0]); break
     case 'rn': await rn(args[0], args[1]); break
     case 'cp': await cp(args[0], args[1]); break
-    case 'mv': await mv(); break
-    case 'rm': await rm(); break
+    case 'mv': await mv(args[0], args[1]); break
+    case 'rm': await rm(args[0]); break
     case 'os': _os(); break
     case 'hash': hash(); break
     case 'compress': compress(); break
@@ -105,12 +105,12 @@ async function cat(path_to_file) {
 async function add(new_file_name) {
   const full_path = path.resolve(new_file_name)
   try {
-    await stat(full_path)
+    await fs.stat(full_path)
     console.log('Operation failed')
   } catch (err) {
     if (err.code === 'ENOENT') {
       try {
-        await writeFile(fullPath, '', { flag: 'wx' })
+        await fs.writeFile(fullPath, '', { flag: 'wx' })
       } catch {
         console.log('Operation failed')
       }
@@ -138,8 +138,24 @@ async function mkdir(new_directory_name) {
   }
 }
 
-function rn(path_to_file, new_filename) {
-
+async function rn(path_to_file, new_filename) {
+  const oldpath = path.resolve(path_to_file)
+  const newpath = path.resolve(new_filename)
+  try {
+    await fs.stat(oldpath)
+    try {
+      await fs.stat(newpath)
+      console.log('Operation failed')
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        await fs.rename(oldpath, newpath)
+      } else {
+        console.log('Operation failed')
+      }
+    }
+  } catch {
+    console.log('Operation failed')
+  }
 }
 
 function cp(path_to_file, path_to_new_directory) {
