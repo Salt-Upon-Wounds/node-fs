@@ -110,19 +110,32 @@ async function add(new_file_name) {
   } catch (err) {
     if (err.code === 'ENOENT') {
       try {
-        await writeFile(fullPath, '', { flag: 'wx' });
+        await writeFile(fullPath, '', { flag: 'wx' })
       } catch {
-        console.log('Operation failed');
+        console.log('Operation failed')
       }
     } else {
-      console.log('Operation failed');
+      console.log('Operation failed')
     }
   }
-
 }
 
-function mkdir(new_directory_name) {
-
+async function mkdir(new_directory_name) {
+  const full_path = path.resolve(new_file_name)
+  try {
+    await stat(full_path)
+    console.log('Operation failed')
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      try {
+        await mkdir(fullPath)
+      } catch {
+        console.log('Operation failed')
+      }
+    } else {
+      console.log('Operation failed')
+    }
+  }
 }
 
 function rn(path_to_file, new_filename) {
