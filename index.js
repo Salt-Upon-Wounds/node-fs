@@ -49,7 +49,7 @@ rl.on('line', async (line) => {
     case 'mv': await mv(args[0], args[1]); break
     case 'rm': await rm(args[0]); break
     case 'os': _os(); break
-    case 'hash': hash(); break
+    case 'hash': await hash(); break
     case 'compress': compress(); break
     case 'decompress': decompress(); break
     default: console.log('Invalid input')
@@ -221,8 +221,27 @@ function print_cpus() {
   })
 }
 
-function hash(path_to_file) {
+async function hash(path_to_file) {
+  const full_path = path.resolve(path_to_file);
 
+  try {
+    const stats = await stat(full_path);
+    if (!stats.isFile()) throw new Error();
+
+    return await new Promise((resolve, reject) => {
+      const stream = createReadStream(full_path);
+      const hash = createHash('sha256');
+
+      stream.on('error', reject);
+      stream.on('data', (chunk) => hash.update(chunk));
+      stream.on('end', () => {
+        console.log(hash.digest('hex'))
+        resolve()
+      });
+    });
+  } catch {
+    throw new Error('Operation failed');
+  }
 }
 
 function compress (path_to_file, path_to_destination) {
