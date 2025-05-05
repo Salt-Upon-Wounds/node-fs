@@ -2,9 +2,9 @@ import fs from 'node:fs/promises'
 import path from 'path'
 
 export async function rn(path_to_file, new_filename) {
-  const oldpath = path.resolve(path_to_file)
-  const newpath = path.resolve(new_filename)
   try {
+    const oldpath = path.resolve(path_to_file)
+    const newpath = path.resolve(new_filename)
     await fs.stat(oldpath)
     try {
       await fs.stat(newpath)

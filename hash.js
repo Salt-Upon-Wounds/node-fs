@@ -1,12 +1,11 @@
 import fs from 'node:fs/promises'
 import path from 'path'
-import { createReadStream, createWriteStream } from "node:fs"
+import { createReadStream } from "node:fs"
 import { createHash } from "node:crypto"
 
 export async function hash(path_to_file) {
-  const full_path = path.resolve(path_to_file)
-
   try {
+    const full_path = path.resolve(path_to_file)
     if (!(await fs.stat(full_path)).isFile()) throw Error()
 
     await new Promise((resolve, reject) => {
