@@ -201,16 +201,24 @@ async function rm(path_to_file) {
 }
 
 function _os(arg) {
-  /*Get EOL (default system End-Of-Line) and print it to console
-    os --EOL
-    Get host machine CPUs info (overall amount of CPUS plus model and clock rate (in GHz) for each of them) and print it to console
-    os --cpus
-    Get home directory and print it to console
-    os --homedir
-    Get current system user name (Do not confuse with the username that is set when the application starts) and print it to console
-    os --username
-    Get CPU architecture for which Node.js binary has compiled and print it to console
-    os --architecture */
+  switch (arg) {
+    case '--EOL': console.log(JSON.stringify(os.EOL)); break;
+    case '--cpus': print_cpus(); break;
+    case '--homedir': console.log(homeDir); break;
+    case '--username': console.log(os.userInfo().username); break;
+    case '--architecture': console.log(process.arch); break;
+    default: console.log('Invalid input')
+  }
+}
+
+function print_cpus() {
+  const cpus = os.cpus()
+
+  console.log(`CPUs: ${cpus.length}`)
+  cpus.forEach((cpu, index) => {
+    const ghz = (cpu.speed / 1000).toFixed(2)
+    console.log(`CPU ${index + 1}: ${cpu.model}, ${ghz} GHz`)
+  })
 }
 
 function hash(path_to_file) {
